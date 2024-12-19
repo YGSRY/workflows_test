@@ -1,0 +1,54 @@
+name: Build Android 15 GSI
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout source code
+      uses: actions/checkout@v3
+
+    - name: Set up environment
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y openjdk-17-jdk git-core gnupg flex bison gperf \
+          build-essential zip curl zlib1g-dev gcc-multilib g++-multilib \
+          libc6-dev-i386 libncurses5 lib32ncurses5-dev x11proto-core-dev \
+          libx11-dev lib32z1-dev libgl1-mesa-dev libxml2-utils xsltproc unzip \
+          python-is-python3 python3-pip ccache rsync bc
+
+    - name: Install repo tool
+      run: |
+        curl https://storage.googleapis.com/git-repo-downloads/repo > ~/repo
+        chmod a+x ~/repo
+        sudo mv ~/repo /usr/local/bin/repo
+
+    - name: Sync Android source
+      run: |
+        mkdir -p android-15-gsi
+        cd android-15-gsi
+        repo init -u https://android.googlesource.com/platform/manifest -b android-15.0.0_r1
+        repo sync -j$(nproc)
+
+    - name: Add OpenSSH and Dropbear
+      run: |
+        cd android-15-gsi
+        echo "Adding OpenSSH and Dropbear..."
+        mkdir -p device/gsi/overlays
+        echo "PRODUCT_PACKAGES += openssh dropbear" >> device/gsi/overlays/AndroidProducts.mk
+
+    - name: Build GSI
+      run: |
+        cd android-15-gsi
+        source build/envsetup.sh
+        lunch gsi_arm64-userdebug
+        make -j$(nproc) systemimage
+
+    - name: Upload GSI artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: android-15-gsi
+        path: android-15-gsi/out/target/product/gsi_arm64/system.img

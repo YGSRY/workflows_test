@@ -14,7 +14,7 @@ jobs:
     - name: Install Dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential clang llvm curl wget git
+        sudo apt-get install -y build-essential clang llvm curl wget git unzip
 
     - name: Install Android NDK
       run: |
@@ -39,6 +39,12 @@ jobs:
       run: |
         git clone https://github.com/janmojzis/tinyssh.git
         cd tinyssh
+
+    - name: Fix trylibs.sh
+      run: |
+        cd tinyssh
+        sed -i 's/-lsocket -lnsl //g' trylibs.sh  # 移除无用库检测
+        echo "-lutil -lrandombytes -l25519 -lntruprime" > libs
 
     - name: Compile TinySSH
       run: |

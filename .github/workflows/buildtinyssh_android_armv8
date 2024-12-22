@@ -1,0 +1,52 @@
+name: Compile TinySSH for Android ARMv8-A
+
+on:
+  workflow_dispatch:  # 手动触发
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+
+    - name: Install Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential clang llvm curl wget git
+
+    - name: Install Android NDK
+      run: |
+        mkdir -p $HOME/android-ndk
+        curl -L https://dl.google.com/android/repository/android-ndk-r25c-linux.zip -o android-ndk.zip
+        unzip android-ndk.zip -d $HOME/android-ndk
+        export ANDROID_NDK_HOME=$HOME/android-ndk/android-ndk-r25c
+
+    - name: Setup Android NDK Toolchain
+      run: |
+        export TOOLCHAIN=$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64
+        export PATH=$TOOLCHAIN/bin:$PATH
+        export CC=aarch64-linux-android21-clang
+        export AR=aarch64-linux-android-ar
+        export AS=aarch64-linux-android-as
+        export LD=aarch64-linux-android-ld
+        export STRIP=aarch64-linux-android-strip
+        export CFLAGS="-march=armv8-a -O2 -fPIC"
+        export LDFLAGS="-static"
+
+    - name: Clone TinySSH
+      run: |
+        git clone https://github.com/janmojzis/tinyssh.git
+        cd tinyssh
+
+    - name: Compile TinySSH
+      run: |
+        cd tinyssh
+        make CC=$CC CFLAGS="$CFLAGS" LDFLAGS="$LDFLAGS"
+
+    - name: Upload Compiled Binary
+      uses: actions/upload-artifact@v3
+      with:
+        name: tinysshd-android-armv8a
+        path: tinyssh/tinysshd

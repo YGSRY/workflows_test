@@ -40,11 +40,12 @@ jobs:
         git clone https://github.com/janmojzis/tinyssh.git
         cd tinyssh
 
-    - name: Fix trylibs.sh
+    - name: Fix tryfeature.sh and libs
       run: |
         cd tinyssh
-        sed -i 's/-lsocket -lnsl //g' trylibs.sh  # 移除无用库检测
+        sed -i 's/-lsocket -lnsl //g' trylibs.sh
         echo "-lutil -lrandombytes -l25519 -lntruprime" > libs
+        echo "#define HASLIB25519 1" > haslib25519.h
 
     - name: Compile TinySSH
       run: |

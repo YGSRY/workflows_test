@@ -17,7 +17,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential autoconf automake libtool wget unzip sed coreutils
+          sudo apt-get install -y build-essential autoconf automake libtool wget unzip
 
       - name: Download and extract Dropbear source
         run: |
@@ -25,11 +25,11 @@ jobs:
           tar xjf dropbear-2024.86.tar.bz2
           mv dropbear-2024.86 dropbear
 
-      - name: Download and set up Android NDK
+      - name: Download and set up Android NDK r27c
         run: |
-          wget https://dl.google.com/android/repository/android-ndk-r25c-linux.zip
-          unzip android-ndk-r25c-linux.zip
-          export ANDROID_NDK_HOME=$PWD/android-ndk-r25c
+          wget https://dl.google.com/android/repository/android-ndk-r27c-linux.zip
+          unzip android-ndk-r27c-linux.zip
+          export ANDROID_NDK_HOME=$PWD/android-ndk-r27c
           export PATH=$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin:$PATH
 
       - name: Create localoptions.h to disable password authentication
@@ -43,26 +43,12 @@ jobs:
       - name: Configure Dropbear for Android
         run: |
           cd dropbear
-          /bin/bash ./configure --host=aarch64-linux-android --enable-static --disable-zlib --disable-password-auth
-        env:
-          ANDROID_NDK_HOME: $PWD/android-ndk-r25c
-          PATH: $PWD/android-ndk-r25c/toolchains/llvm/prebuilt/linux-x86_64/bin:$PATH
+          ./configure --host=aarch64-linux-android --enable-static --disable-zlib --disable-password-auth
 
       - name: Build Dropbear
         run: |
           cd dropbear
           make PROGRAMS="dropbear dbclient dropbearkey dropbearconvert scp" STATIC=1
-        env:
-          ANDROID_NDK_HOME: $PWD/android-ndk-r25c
-          PATH: $PWD/android-ndk-r25c/toolchains/llvm/prebuilt/linux-x86_64/bin:$PATH
-
-      - name: Verify Build Outputs
-        run: |
-          ls -l dropbear/dropbear
-          ls -l dropbear/dbclient
-          ls -l dropbear/dropbearkey
-          ls -l dropbear/dropbearconvert
-          ls -l dropbear/scp
 
       - name: List files in dropbear directory
         run: |

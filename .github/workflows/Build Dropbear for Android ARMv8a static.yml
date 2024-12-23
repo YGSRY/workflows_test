@@ -32,6 +32,11 @@ jobs:
           export ANDROID_NDK_HOME=$PWD/android-ndk-r25c
           export PATH=$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin:$PATH
 
+      - name: Disable password authentication in Dropbear
+        run: |
+          # 修改 src/sysoptions.h 文件，禁用 DROPBEAR_SVR_PASSWORD_AUTH
+          sed -i 's/#define DROPBEAR_SVR_PASSWORD_AUTH 1/#define DROPBEAR_SVR_PASSWORD_AUTH 0/' dropbear/src/sysoptions.h
+
       - name: Configure and build Dropbear
         env:
           TOOLCHAIN: ${{ runner.temp }}/android-toolchain
@@ -45,8 +50,7 @@ jobs:
 
           # 编译 Dropbear
           cd dropbear
-         
-          ./configure --host=aarch64-linux-android --enable-static --disable-zlib --disable-password-auth
+          ./configure --host=aarch64-linux-android --enable-static --disable-zlib
           make PROGRAMS="dropbear dbclient dropbearkey dropbearconvert scp" STATIC=1
 
       - name: Upload artifacts

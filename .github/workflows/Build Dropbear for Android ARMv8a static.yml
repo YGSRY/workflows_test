@@ -32,12 +32,12 @@ jobs:
           export ANDROID_NDK_HOME=$PWD/android-ndk-r27c
           export PATH=$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin:$PATH
 
-      - name: Check if aarch64-linux-android-gcc exists
+      - name: Check if clang exists
         run: |
-          if [ -f "$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android-gcc" ]; then
-            echo "Compiler found!"
+          if [ -f "$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android21-clang" ]; then
+            echo "Clang compiler found!"
           else
-            echo "Compiler not found!"
+            echo "Clang compiler not found!"
             exit 1
           fi
 
@@ -49,7 +49,7 @@ jobs:
           echo "#define DROPBEAR_CLI_PASSWORD_AUTH 0" >> dropbear/localoptions.h
           echo "#endif /* LOCALOPTIONS_H */" >> dropbear/localoptions.h
 
-      - name: Configure Dropbear for Android ARMv8a
+      - name: Configure Dropbear for Android ARMv8a using clang
         run: |
           cd dropbear
           export CC=$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android21-clang

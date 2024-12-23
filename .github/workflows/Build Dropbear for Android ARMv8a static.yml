@@ -32,28 +32,23 @@ jobs:
           export ANDROID_NDK_HOME=$PWD/android-ndk-r25c
           export PATH=$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin:$PATH
 
-      - name: Disable password authentication in Dropbear
+      - name: Create localoptions.h to disable password authentication
         run: |
-          # 修改 src/sysoptions.h 文件，禁用 DROPBEAR_SVR_PASSWORD_AUTH
-          sed -i 's/#define DROPBEAR_SVR_PASSWORD_AUTH 1/#define DROPBEAR_SVR_PASSWORD_AUTH 0/' dropbear/src/sysoptions.h
-          sed -i 's/#define HAVE_CRYPT 1/#define HAVE_CRYPT 0/' dropbear/src/sysoptions.h
-          # 强制修改 Makefile 中的编译选项以禁用密码认证
-          sed -i 's/ENABLE_PASSWORD_AUTH=1/ENABLE_PASSWORD_AUTH=0/' dropbear/Makefile
+          # 创建 localoptions.h 文件，禁用 DROPBEAR_SVR_PASSWORD_AUTH 和 DROPBEAR_CLI_PASSWORD_AUTH
+          echo "#ifndef LOCALOPTIONS_H" > dropbear/localoptions.h
+          echo "#define LOCALOPTIONS_H" >> dropbear/localoptions.h
+          echo "#define DROPBEAR_SVR_PASSWORD_AUTH 0" >> dropbear/localoptions.h
+          echo "#define DROPBEAR_CLI_PASSWORD_AUTH 0" >> dropbear/localoptions.h
+          echo "#endif /* LOCALOPTIONS_H */" >> dropbear/localoptions.h
 
-      - name: Configure and build Dropbear
-        env:
-          TOOLCHAIN: ${{ runner.temp }}/android-toolchain
+      - name: Configure Dropbear for Android
         run: |
-          # 设置交叉编译工具链的路径
-          export CC=$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android21-clang
-          export CXX=$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android21-clang++
-          export AR=$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android-ar
-          export LD=$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android-ld
-          export STRIP=$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android-strip
-
-          # 编译 Dropbear
           cd dropbear
-          ./configure --host=aarch64-linux-android --enable-static --disable-zlib
+          ./configure --host=aarch64-linux-android --enable-static --disable-zlib --disable-password-auth
+
+      - name: Build Dropbear
+        run: |
+          cd dropbear
           make PROGRAMS="dropbear dbclient dropbearkey dropbearconvert scp" STATIC=1
 
       - name: Upload artifacts

@@ -45,7 +45,8 @@ jobs:
 
           # 编译 Dropbear
           cd dropbear
-          ./configure --host=aarch64-linux-android --enable-static --disable-zlib
+         
+          ./configure --host=aarch64-linux-android --enable-static --disable-zlib --disable-password-auth
           make PROGRAMS="dropbear dbclient dropbearkey dropbearconvert scp" STATIC=1
 
       - name: Upload artifacts

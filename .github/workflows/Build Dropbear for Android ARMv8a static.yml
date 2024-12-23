@@ -39,12 +39,11 @@ jobs:
           echo "#define DROPBEAR_SVR_PASSWORD_AUTH 0" >> dropbear/localoptions.h
           echo "#define DROPBEAR_CLI_PASSWORD_AUTH 0" >> dropbear/localoptions.h
           echo "#endif /* LOCALOPTIONS_H */" >> dropbear/localoptions.h
-          chmod 644 dropbear/localoptions.h  # Ensure correct file permissions
 
       - name: Configure Dropbear for Android
         run: |
           cd dropbear
-          ./configure --host=aarch64-linux-android --enable-static --disable-zlib --disable-password-auth
+          /bin/bash ./configure --host=aarch64-linux-android --enable-static --disable-zlib --disable-password-auth
         env:
           ANDROID_NDK_HOME: $PWD/android-ndk-r25c
           PATH: $PWD/android-ndk-r25c/toolchains/llvm/prebuilt/linux-x86_64/bin:$PATH

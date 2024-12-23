@@ -32,6 +32,15 @@ jobs:
           export ANDROID_NDK_HOME=$PWD/android-ndk-r27c
           export PATH=$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin:$PATH
 
+      - name: Check if aarch64-linux-android-gcc exists
+        run: |
+          if [ -f "$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android-gcc" ]; then
+            echo "Compiler found!"
+          else
+            echo "Compiler not found!"
+            exit 1
+          fi
+
       - name: Create localoptions.h to disable password authentication
         run: |
           echo "#ifndef LOCALOPTIONS_H" > dropbear/localoptions.h
@@ -43,7 +52,8 @@ jobs:
       - name: Configure Dropbear for Android ARMv8a
         run: |
           cd dropbear
-          ./configure --host=aarch64-linux-android --enable-static --disable-zlib --disable-password-auth
+          export CC=$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android21-clang
+          ./configure --host=aarch64-linux-android --enable-static --disable-zlib
 
       - name: Build Dropbear for ARMv8a
         run: |

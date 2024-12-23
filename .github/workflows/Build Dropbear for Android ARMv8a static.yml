@@ -58,6 +58,11 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: dropbear-android-armv8a
-          path: dropbear/{dropbear,dbclient,dropbearkey,dropbearconvert,scp}
+          path: |
+            dropbear/dropbear
+            dropbear/dbclient
+            dropbear/dropbearkey
+            dropbear/dropbearconvert
+            dropbear/scp
           if-no-files-found: warn
           include-hidden-files: false

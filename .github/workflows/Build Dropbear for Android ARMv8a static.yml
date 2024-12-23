@@ -34,7 +34,6 @@ jobs:
 
       - name: Create localoptions.h to disable password authentication
         run: |
-          # 创建 localoptions.h 文件，禁用 DROPBEAR_SVR_PASSWORD_AUTH 和 DROPBEAR_CLI_PASSWORD_AUTH
           echo "#ifndef LOCALOPTIONS_H" > dropbear/localoptions.h
           echo "#define LOCALOPTIONS_H" >> dropbear/localoptions.h
           echo "#define DROPBEAR_SVR_PASSWORD_AUTH 0" >> dropbear/localoptions.h
@@ -51,8 +50,14 @@ jobs:
           cd dropbear
           make PROGRAMS="dropbear dbclient dropbearkey dropbearconvert scp" STATIC=1
 
+      - name: List files in dropbear directory
+        run: |
+          ls -l dropbear
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
         with:
           name: dropbear-android-armv8a
           path: dropbear/{dropbear,dbclient,dropbearkey,dropbearconvert,scp}
+          if-no-files-found: warn
+          include-hidden-files: false

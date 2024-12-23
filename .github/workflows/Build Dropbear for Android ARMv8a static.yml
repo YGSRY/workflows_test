@@ -36,6 +36,9 @@ jobs:
         run: |
           # 修改 src/sysoptions.h 文件，禁用 DROPBEAR_SVR_PASSWORD_AUTH
           sed -i 's/#define DROPBEAR_SVR_PASSWORD_AUTH 1/#define DROPBEAR_SVR_PASSWORD_AUTH 0/' dropbear/src/sysoptions.h
+          sed -i 's/#define HAVE_CRYPT 1/#define HAVE_CRYPT 0/' dropbear/src/sysoptions.h
+          # 强制修改 Makefile 中的编译选项以禁用密码认证
+          sed -i 's/ENABLE_PASSWORD_AUTH=1/ENABLE_PASSWORD_AUTH=0/' dropbear/Makefile
 
       - name: Configure and build Dropbear
         env:

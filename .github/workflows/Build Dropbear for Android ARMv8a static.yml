@@ -1,0 +1,56 @@
+name: Build Dropbear for Android ARMv8a
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-dropbear:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential autoconf automake libtool wget
+
+      - name: Download and extract Dropbear source
+        run: |
+          wget https://matt.ucc.asn.au/dropbear/releases/dropbear-2024.86.tar.bz2
+          tar xjf dropbear-2024.86.tar.bz2
+          mv dropbear-2024.86 dropbear
+
+      - name: Set up Android NDK
+        uses: android/ndk-build-action@v2
+        with:
+          ndk-version: r25c
+
+      - name: Configure and build Dropbear
+        env:
+          TOOLCHAIN: ${{ runner.temp }}/android-toolchain
+        run: |
+          # Create standalone toolchain for arm64-v8a
+          $ANDROID_NDK_HOME/build/tools/make_standalone_toolchain.py \
+            --arch arm64 --api 21 --install-dir $TOOLCHAIN
+
+          export PATH=$TOOLCHAIN/bin:$PATH
+          export CC=aarch64-linux-android-clang
+          export CXX=aarch64-linux-android-clang++
+          export AR=aarch64-linux-android-ar
+          export LD=aarch64-linux-android-ld
+          export STRIP=aarch64-linux-android-strip
+
+          cd dropbear
+          ./configure --host=aarch64-linux-android --enable-static --disable-zlib
+          make PROGRAMS="dropbear dbclient dropbearkey dropbearconvert scp" STATIC=1
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: dropbear-android-armv8a
+          path: dropbear/{dropbear,dbclient,dropbearkey,dropbearconvert,scp}

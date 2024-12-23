@@ -53,7 +53,7 @@ jobs:
         run: |
           cd dropbear
           export CC=$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android21-clang
-          export CFLAGS="$CFLAGS -D__ARM_ARCH_8A__ -D__ARM64__"
+          export CFLAGS="$CFLAGS -D__ARM_ARCH_8A__ -D__ARM64__ -fPIC -fPIE"
           export LDFLAGS="$LDFLAGS -Wl,--fix-cortex-a53-843419"
           ./configure --host=aarch64-linux-android --enable-static --disable-zlib
 

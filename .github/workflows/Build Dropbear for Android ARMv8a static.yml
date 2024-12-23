@@ -25,7 +25,7 @@ jobs:
           tar xjf dropbear-2024.86.tar.bz2
           mv dropbear-2024.86 dropbear
 
-      - name: Download and set up Android NDK r27c
+      - name: Download and set up Android NDK (r27c)
         run: |
           wget https://dl.google.com/android/repository/android-ndk-r27c-linux.zip
           unzip android-ndk-r27c-linux.zip
@@ -40,14 +40,15 @@ jobs:
           echo "#define DROPBEAR_CLI_PASSWORD_AUTH 0" >> dropbear/localoptions.h
           echo "#endif /* LOCALOPTIONS_H */" >> dropbear/localoptions.h
 
-      - name: Configure Dropbear for Android
+      - name: Configure Dropbear for Android ARMv8a
         run: |
           cd dropbear
           ./configure --host=aarch64-linux-android --enable-static --disable-zlib --disable-password-auth
 
-      - name: Build Dropbear
+      - name: Build Dropbear for ARMv8a
         run: |
           cd dropbear
+          make clean
           make PROGRAMS="dropbear dbclient dropbearkey dropbearconvert scp" STATIC=1
 
       - name: List files in dropbear directory

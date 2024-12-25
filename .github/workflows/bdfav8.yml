@@ -29,6 +29,11 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y build-essential autoconf automake libtool
 
+    - name: Check NDK compiler
+      run: |
+        which aarch64-linux-android21-clang
+        aarch64-linux-android21-clang --version
+
     - name: Download and extract Dropbear source
       run: |
         wget https://matt.ucc.asn.au/dropbear/releases/dropbear-2024.86.tar.bz2
@@ -62,6 +67,12 @@ jobs:
           --disable-utmp \
           --disable-wtmp \
           --disable-utmpx
+
+    - name: Check config.log for errors
+      run: |
+        cd dropbear
+        # Check config.log to understand why the configure failed
+        tail -n 20 config.log
 
     - name: Compile Dropbear
       run: |

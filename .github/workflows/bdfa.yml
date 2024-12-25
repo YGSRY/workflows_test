@@ -17,12 +17,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Code
+    - name: Checkout Repository
       uses: actions/checkout@v3
 
     - name: Set up Android NDK
       run: |
-        # 下载并解压 NDK
         mkdir -p $HOME/android-ndk
         curl -L ${{ inputs.ndk_url }} -o ndk.zip
         unzip ndk.zip -d $HOME/android-ndk
@@ -33,26 +32,25 @@ jobs:
 
     - name: Download and Prepare Dropbear
       run: |
-        # 下载并解压 Dropbear
         mkdir -p $HOME/dropbear
         curl -L ${{ inputs.dropbear_url }} -o dropbear.tar.bz2
         tar -xjf dropbear.tar.bz2 -C $HOME
         mv $HOME/dropbear-2024.86 $HOME/dropbear
 
-        # 配置 localoptions.h
+        # 修改 localoptions.h 文件，禁用密码认证
         echo '#define DROPBEAR_SVR_PASSWORD_AUTH 0' >> $HOME/dropbear/localoptions.h
         echo '#define DROPBEAR_CLI_PASSWORD_AUTH 0' >> $HOME/dropbear/localoptions.h
 
     - name: Modify svr-auth.c for Root Login
       run: |
-        cd $HOME/dropbear
-        # 强制跳过身份认证检查
+        cd $HOME/dropbear/src
+        # 修改 svr-auth.c 强制跳过认证
         sed -i 's/if (auth_check() == DROPBEAR_FAILURE)/if (0)/' svr-auth.c
 
     - name: Compile Dropbear
       run: |
         cd $HOME/dropbear
-        export CC=aarch64-linux-android24-clang  # Android API 24
+        export CC=aarch64-linux-android24-clang
         export CXX=aarch64-linux-android24-clang++
         ./configure --host=aarch64-linux-android --prefix=$HOME/dropbear-build --disable-zlib --disable-shadow
         make -j$(nproc)

@@ -1,69 +1,64 @@
-name: Build Dropbear for Android
+name: Build Android ARMv8a Dropbear 2024.86
 
 on:
-  push:
-    branches:
-      - main
-  workflow_dispatch:
+  workflow_dispatch: # 手动触发工作流
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v3
+      # Step 1: Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Install Dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y \
-          build-essential \
-          autoconf \
-          automake \
-          libtool \
-          zlib1g-dev \
-          wget \
-          unzip \
-          gcc-aarch64-linux-gnu \
-          musl-tools \
-          libtommath-dev
+      # Step 2: Set up Android NDK (Manually configure NDK version)
+      - name: Set up Android NDK
+        run: |
+          NDK_VERSION=r25b  # Specify the NDK version you want to use
+          wget https://dl.google.com/android/repository/android-ndk-${NDK_VERSION}-linux-x86_64.zip
+          unzip android-ndk-${NDK_VERSION}-linux-x86_64.zip
+          export ANDROID_NDK_HOME=$(pwd)/android-ndk-${NDK_VERSION}
+          echo "ANDROID_NDK_HOME=$ANDROID_NDK_HOME" >> $GITHUB_ENV
 
-    - name: Download and Extract Dropbear Source
-      run: |
-        wget https://matt.ucc.asn.au/dropbear/releases/dropbear-2022.83.tar.bz2
-        tar -xjf dropbear-2022.83.tar.bz2
-        cd dropbear-2022.83
+      # Step 3: Install required dependencies
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential autoconf automake libtool
 
-    - name: Configure Dropbear for Android
-      run: |
-        cd dropbear-2022.83
-        export CC=aarch64-linux-gnu-gcc
-        export CFLAGS="--static -Os"
-        ./configure \
-          --host=aarch64-linux-gnu \
-          --disable-zlib \
-          --disable-loginfunc \
-          --enable-static \
-          --disable-pam \
-          --disable-lastlog \
-          --disable-utmp \
-          --disable-wtmp \
-          --disable-utmpx \
-          --disable-shadow \
-          --disable-pututline \
-          --disable-pututxline \
-          --enable-root-login \
-          --disable-client-password-auth \
-          --disable-server-password-auth
+      # Step 4: Modify `localoptions.h` to disable password authentication
+      - name: Modify localoptions.h
+        run: |
+          sed -i 's/#define DROPBEAR_SVR_PASSWORD_AUTH 1/#define DROPBEAR_SVR_PASSWORD_AUTH 0/' path/to/dropbear-2024.86/src/localoptions.h
+          sed -i 's/#define DROPBEAR_CLI_PASSWORD_AUTH 1/#define DROPBEAR_CLI_PASSWORD_AUTH 0/' path/to/dropbear-2024.86/src/localoptions.h
 
-    - name: Build Dropbear
-      run: |
-        cd dropbear-2022.83
-        make PROGRAMS="dropbear dbclient dropbearkey dropbearconvert scp"
+      # Step 5: Modify source code in svr-auth.c to force root login without authentication
+      - name: Modify source for root login without authentication
+        run: |
+          # Modify Dropbear's source code to ensure root login without password
+          # Modify svr-auth.c to bypass authentication
+          sed -i 's/username != NULL/username == "root" && password == NULL/' path/to/dropbear-2024.86/src/serv/svr-auth.c
+          sed -i 's/validate_password(username, password)//' path/to/dropbear-2024.86/src/serv/svr-auth.c
 
-    - name: Upload Build Artifacts
-      uses: actions/upload-artifact@v3
-      with:
-        name: dropbear-android-64
-        path: dropbear-2022.83/
+      # Step 6: Set up the cross-compilation environment for Android armv8a
+      - name: Set up cross-compilation for Android armv8a
+        run: |
+          export CROSS_COMPILE=$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android-
+          export SYSROOT=$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/sysroot
+          export PATH=$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin:$PATH
+
+      # Step 7: Build Dropbear for ARMv8a architecture
+      - name: Build Dropbear
+        run: |
+          cd path/to/dropbear-2024.86
+          ./configure --host=aarch64-linux-android --prefix=$HOME/dropbear --sysroot=$SYSROOT
+          make
+          make install
+
+      # Step 8: Archive the build artifacts (optional)
+      - name: Archive the build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: dropbear-armv8a
+          path: $HOME/dropbear

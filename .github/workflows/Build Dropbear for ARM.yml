@@ -37,11 +37,16 @@ jobs:
         curl -OL "https://raw.githubusercontent.com/ubiquiti/dropbear-android/master/config.guess"
         curl -OL "https://raw.githubusercontent.com/ubiquiti/dropbear-android/master/config.sub"
 
+    - name: Update Autotools configuration
+      run: |
+        cd dropbear-DROPBEAR_2018.76/
+        autoupdate || true
+        autoreconf -fi
+
     - name: Apply patch and configure
       run: |
         cd dropbear-DROPBEAR_2018.76/
-        autoreconf
-        patch -p1 < android-compat.patch
+        patch -p1 < android-compat.patch || (cat configure.rej && exit 1)
         ./configure --host=aarch64-unknown-linux-android \
                     --disable-utmp \
                     --disable-wtmp \

@@ -12,10 +12,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Step 2: Set up Android NDK (Manually configure NDK version)
-      - name: Set up Android NDK
+      # Step 2: Set up Android NDK (Manually configure NDK version r27c)
+      - name: Set up Android NDK r27c
         run: |
-          NDK_VERSION=r25b  # Specify the NDK version you want to use
+          NDK_VERSION=r27c  # Specify the NDK version you want to use (e.g., r27c)
           wget https://dl.google.com/android/repository/android-ndk-${NDK_VERSION}-linux-x86_64.zip
           unzip android-ndk-${NDK_VERSION}-linux-x86_64.zip
           export ANDROID_NDK_HOME=$(pwd)/android-ndk-${NDK_VERSION}

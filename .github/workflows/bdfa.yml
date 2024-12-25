@@ -26,7 +26,8 @@ jobs:
           wget \
           unzip \
           gcc-aarch64-linux-gnu \
-          musl-tools
+          musl-tools \
+          libtommath-dev
 
     - name: Download and Extract Dropbear Source
       run: |
@@ -52,10 +53,9 @@ jobs:
           --disable-shadow \
           --disable-pututline \
           --disable-pututxline \
-          --disable-bundled-libtom \
+          --enable-root-login \
           --disable-client-password-auth \
-          --disable-server-password-auth \
-          --enable-root-login
+          --disable-server-password-auth
 
     - name: Build Dropbear
       run: |

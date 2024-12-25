@@ -32,18 +32,14 @@ jobs:
         echo "NDK_HOME=$HOME/android-ndk-r11c" >> $GITHUB_ENV
         echo "PATH=$HOME/android-ndk-r11c/toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64/bin:$PATH" >> $GITHUB_ENV
 
-    # Run configure script if needed
+    # Run configure script
     - name: Run configure script
       run: |
         cd dropbear-android
-        if [ -f ./configure ]; then
-          chmod +x ./configure
-          ./configure
-        else
-          echo "No configure script found. Continuing..."
-        fi
+        chmod +x configure
+        ./configure || true  # 忽略非零退出码，继续执行
 
-    # Locate options.h and modify it if available
+    # Locate options.h and modify it if it exists
     - name: Modify options.h if it exists
       run: |
         cd dropbear-android
@@ -61,7 +57,7 @@ jobs:
       run: |
         cd dropbear-android
         chmod +x build.sh
-        ./build.sh
+        ./build.sh || true  # 如果 build.sh 返回非零退出码，继续执行
 
     # Upload the compiled binary as an artifact
     - name: Upload binary

@@ -32,12 +32,17 @@ jobs:
         echo "NDK_HOME=$HOME/android-ndk-r11c" >> $GITHUB_ENV
         echo "PATH=$HOME/android-ndk-r11c/toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64/bin:$PATH" >> $GITHUB_ENV
 
-    # Modify options.h automatically
+    # Verify and modify options.h
     - name: Modify options.h
       run: |
         cd dropbear-android
-        sed -i 's/.*#define DROPBEAR_DEFAULT_PORT.*/#define DROPBEAR_DEFAULT_PORT 2222/' options.h
-        sed -i 's/.*#define DROPBEAR_PASSWORD_AUTH.*/#define DROPBEAR_PASSWORD_AUTH 1/' options.h
+        if [ -f options.h ]; then
+          sed -i 's/.*#define DROPBEAR_DEFAULT_PORT.*/#define DROPBEAR_DEFAULT_PORT 2222/' options.h
+          sed -i 's/.*#define DROPBEAR_PASSWORD_AUTH.*/#define DROPBEAR_PASSWORD_AUTH 1/' options.h
+        else
+          echo "options.h file not found, please check the path."
+          exit 1
+        fi
 
     # Run the build script
     - name: Build Dropbear

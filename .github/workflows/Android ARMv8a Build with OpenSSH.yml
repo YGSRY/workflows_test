@@ -1,4 +1,4 @@
-name: Android ARMv8a Build with OpenSSH
+name: Android ARMv8a Build with OpenSSH 9.9p1
 
 on:
   push:
@@ -39,12 +39,14 @@ jobs:
         export PATH=$NDK_HOME:$PATH
         echo "NDK Home: $NDK_HOME"
 
-    # Step 5: 获取并编译 OpenSSH
-    - name: Clone and Build OpenSSH for Android
+    # Step 5: 获取 OpenSSH 9.9p1 版本并编译
+    - name: Clone and Build OpenSSH 9.9p1 for Android
       run: |
-        # 克隆 OpenSSH 仓库
-        git clone https://android.googlesource.com/platform/external/openssh
-        cd openssh
+        # 克隆 OpenSSH 仓库（GitHub 上的 OpenSSH 仓库）
+        git clone https://github.com/openssh/openssh-portable
+        cd openssh-portable
+        # 切换到 9.9p1 版本
+        git checkout tags/OPENSSH_9_9p1
         # 设置编译环境并编译 OpenSSH
         export ANDROID_NDK_HOME=$NDK_HOME
         export PATH=$ANDROID_NDK_HOME:$PATH

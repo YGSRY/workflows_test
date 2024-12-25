@@ -27,8 +27,6 @@ jobs:
         unzip ndk.zip -d $HOME/android-ndk
         export ANDROID_NDK_HOME=$HOME/android-ndk/android-ndk-r27c
         export PATH=$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin:$PATH
-      env:
-        ANDROID_NDK_HOME: $HOME/android-ndk
 
     - name: Download and Prepare Dropbear
       run: |
@@ -37,21 +35,20 @@ jobs:
         tar -xjf dropbear.tar.bz2 -C $HOME
         mv $HOME/dropbear-2024.86 $HOME/dropbear
 
-        # 修改 localoptions.h 文件，禁用密码认证
+        # 创建并配置 localoptions.h
         echo '#define DROPBEAR_SVR_PASSWORD_AUTH 0' >> $HOME/dropbear/localoptions.h
         echo '#define DROPBEAR_CLI_PASSWORD_AUTH 0' >> $HOME/dropbear/localoptions.h
 
     - name: Modify svr-auth.c for Root Login
       run: |
         cd $HOME/dropbear/src
-        # 修改 svr-auth.c 强制跳过认证
+        # 修改 svr-auth.c 文件，强制跳过认证
         sed -i 's/if (auth_check() == DROPBEAR_FAILURE)/if (0)/' svr-auth.c
 
     - name: Compile Dropbear
       run: |
         cd $HOME/dropbear
         export CC=aarch64-linux-android24-clang
-        export CXX=aarch64-linux-android24-clang++
         ./configure --host=aarch64-linux-android --prefix=$HOME/dropbear-build --disable-zlib --disable-shadow
         make -j$(nproc)
         make install

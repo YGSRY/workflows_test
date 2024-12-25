@@ -22,32 +22,39 @@ jobs:
 
     - name: Set up Android NDK
       run: |
+        # 下载并解压 NDK
         mkdir -p $HOME/android-ndk
         curl -L ${{ inputs.ndk_url }} -o ndk.zip
         unzip ndk.zip -d $HOME/android-ndk
         export ANDROID_NDK_HOME=$HOME/android-ndk/android-ndk-r27c
         export PATH=$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin:$PATH
+      env:
+        ANDROID_NDK_HOME: $HOME/android-ndk
 
-    - name: Download and Extract Dropbear
+    - name: Download and Prepare Dropbear
       run: |
+        # 下载并解压 Dropbear
         mkdir -p $HOME/dropbear
         curl -L ${{ inputs.dropbear_url }} -o dropbear.tar.bz2
-        tar -xjf dropbear.tar.bz2 -C $HOME/dropbear --strip-components=1
-        cd $HOME/dropbear
-        # 修改 localoptions.h
-        echo '#define DROPBEAR_SVR_PASSWORD_AUTH 0' >> localoptions.h
-        echo '#define DROPBEAR_CLI_PASSWORD_AUTH 0' >> localoptions.h
+        tar -xjf dropbear.tar.bz2 -C $HOME
+        mv $HOME/dropbear-2024.86 $HOME/dropbear
+
+        # 配置 localoptions.h
+        echo '#define DROPBEAR_SVR_PASSWORD_AUTH 0' >> $HOME/dropbear/localoptions.h
+        echo '#define DROPBEAR_CLI_PASSWORD_AUTH 0' >> $HOME/dropbear/localoptions.h
 
     - name: Modify svr-auth.c for Root Login
       run: |
         cd $HOME/dropbear
+        # 强制跳过身份认证检查
         sed -i 's/if (auth_check() == DROPBEAR_FAILURE)/if (0)/' svr-auth.c
 
     - name: Compile Dropbear
       run: |
         cd $HOME/dropbear
-        export CC=aarch64-linux-android24-clang
-        ./configure --host=aarch64-linux-android --disable-zlib --disable-shadow --prefix=$HOME/dropbear-build
+        export CC=aarch64-linux-android24-clang  # Android API 24
+        export CXX=aarch64-linux-android24-clang++
+        ./configure --host=aarch64-linux-android --prefix=$HOME/dropbear-build --disable-zlib --disable-shadow
         make -j$(nproc)
         make install
 

@@ -37,23 +37,12 @@ jobs:
         export ANDROID_SDK_ROOT=$HOME/android-sdk
         export PATH=$PATH:$ANDROID_SDK_ROOT/platform-tools:$ANDROID_SDK_ROOT/cmdline-tools/bin:$ANDROID_SDK_ROOT/tools
 
-    - name: Install dependencies
-      run: |
-        sudo apt-get install -y \
-          build-essential \
-          cmake \
-          ninja-build \
-          pkg-config \
-          git \
-          zlib1g-dev \
-          libssl-dev
-
     - name: Download and prepare libssh 0.11.1
       run: |
-        # 下载 libssh 0.11.1 源代码
-        git clone --branch 0.11.1 --single-branch https://git.libssh.org/projects/libssh.git
-        cd libssh
-        git checkout v0.11.1
+        # 下载 libssh 0.11.1 的源代码包
+        wget https://www.libssh.org/files/0.11/libssh-0.11.1.tar.xz
+        tar -xf libssh-0.11.1.tar.xz
+        cd libssh-0.11.1
 
     - name: Build libssh for ARMv8a (Android)
       run: |
@@ -71,7 +60,6 @@ jobs:
         export CXXFLAGS="--sysroot=$SYSROOT"
 
         # 编译 libssh
-        cd libssh
         mkdir build
         cd build
         cmake .. \

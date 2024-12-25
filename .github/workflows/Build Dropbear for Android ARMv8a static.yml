@@ -25,11 +25,11 @@ jobs:
           tar xjf dropbear-2024.86.tar.bz2
           mv dropbear-2024.86 dropbear
 
-      - name: Download and set up Android NDK (r27c)
+      - name: Download and set up Android NDK (r26c)
         run: |
-          wget https://dl.google.com/android/repository/android-ndk-r27c-linux.zip
-          unzip -o android-ndk-r27c-linux.zip
-          export ANDROID_NDK_HOME=$PWD/android-ndk-r27c
+          wget https://dl.google.com/android/repository/android-ndk-r26c-linux.zip
+          unzip -o android-ndk-r26c-linux.zip
+          export ANDROID_NDK_HOME=$PWD/android-ndk-r26c
           export PATH=$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin:$PATH
           # Verify the existence of the target clang
           ls -l $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin
@@ -55,8 +55,8 @@ jobs:
         run: |
           cd dropbear
           export CC=$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android21-clang
-          export CFLAGS="$CFLAGS -D__ARM64__ -fPIC -fPIE -falign-functions=64 -falign-jumps=64 -falign-loops=64"
-          export LDFLAGS="$LDFLAGS -Wl,--fix-cortex-a53-843419"
+          export CFLAGS="$CFLAGS -D__ARM64__ -fPIC -fPIE -falign-functions=64 -falign-jumps=64 -falign-loops=64 -fno-omit-frame-pointer"
+          export LDFLAGS="$LDFLAGS -Wl,--section-start=.tdata=0x10000 -Wl,--fix-cortex-a53-843419"
           ./configure --host=aarch64-linux-android --enable-static --disable-zlib
 
       - name: Build Dropbear for ARMv8a
@@ -72,6 +72,11 @@ jobs:
           file dropbear/dropbearkey
           file dropbear/dropbearconvert
           file dropbear/scp
+
+      - name: Verify ELF TLS alignment
+        run: |
+          readelf -l dropbear/dropbear | grep TLS
+          readelf -l dropbear/dbclient | grep TLS
 
       - name: List files in dropbear directory
         run: |

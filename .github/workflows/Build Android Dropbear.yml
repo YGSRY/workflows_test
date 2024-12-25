@@ -1,0 +1,51 @@
+name: Build Android Dropbear
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Clone the repository
+    - name: Clone Dropbear Android repository
+      run: |
+        git clone https://github.com/Geofferey/dropbear-android.git
+        cd dropbear-android
+
+    # Download and extract Android NDK r11c
+    - name: Download Android NDK r11c
+      run: |
+        curl -L -o android-ndk-r11c-linux-x86_64.zip https://dl.google.com/android/repository/android-ndk-r11c-linux-x86_64.zip
+        unzip android-ndk-r11c-linux-x86_64.zip -d $HOME
+        rm android-ndk-r11c-linux-x86_64.zip
+
+    # Set up environment variables for NDK
+    - name: Set NDK environment variables
+      run: |
+        echo "NDK_HOME=$HOME/android-ndk-r11c" >> $GITHUB_ENV
+        echo "PATH=$HOME/android-ndk-r11c/toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64/bin:$PATH" >> $GITHUB_ENV
+
+    # Export DISABLE_PIE if targeting Android < 4.1
+    - name: Export DISABLE_PIE for Android < 4.1
+      run: echo "DISABLE_PIE=1" >> $GITHUB_ENV
+
+    # Run the build script
+    - name: Build Dropbear
+      run: |
+        cd dropbear-android
+        chmod +x build.sh
+        ./build.sh
+
+    # Upload the compiled binary as an artifact
+    - name: Upload binary
+      uses: actions/upload-artifact@v3
+      with:
+        name: dropbear-binary
+        path: dropbear-android/target/arm/dropbearmulti

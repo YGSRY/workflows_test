@@ -28,13 +28,15 @@ jobs:
       - name: Download and set up Android NDK (r27c)
         run: |
           wget https://dl.google.com/android/repository/android-ndk-r27c-linux.zip
-          unzip android-ndk-r27c-linux.zip
+          unzip -o android-ndk-r27c-linux.zip
           export ANDROID_NDK_HOME=$PWD/android-ndk-r27c
           export PATH=$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin:$PATH
+          # Verify the existence of the target clang
+          ls -l $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin
 
       - name: Check if clang exists
         run: |
-          if [ -f "$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-unknown-linux-android21-clang" ]; then
+          if [ -f "$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android21-clang" ]; then
             echo "Clang compiler found!"
           else
             echo "Clang compiler not found!"
@@ -52,10 +54,10 @@ jobs:
       - name: Configure Dropbear for Android ARMv8a using clang
         run: |
           cd dropbear
-          export CC=$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-unknown-linux-android21-clang
+          export CC=$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android21-clang
           export CFLAGS="$CFLAGS -D__ARM_ARCH_8A__ -D__ARM64__ -fPIC -fPIE"
           export LDFLAGS="$LDFLAGS -Wl,--fix-cortex-a53-843419"
-          ./configure --host=aarch64-unknown-linux-android --enable-static --disable-zlib
+          ./configure --host=aarch64-linux-android --enable-static --disable-zlib
 
       - name: Build Dropbear for ARMv8a
         run: |

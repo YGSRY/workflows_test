@@ -15,13 +15,12 @@ jobs:
       # Step 2: Set up Android NDK r27c
       - name: Set up Android NDK r27c
         run: |
-          NDK_VERSION=r27c  # Specify the NDK version you want to use (e.g., r27c)
-          NDK_URL="https://dl.google.com/android/repository/android-ndk-${NDK_VERSION}-linux.zip"  # Correct NDK URL
+          NDK_VERSION=r27c
+          NDK_URL="https://dl.google.com/android/repository/android-ndk-${NDK_VERSION}-linux.zip"  # NDK URL
           
-          # Attempt to download the NDK
-          wget $NDK_URL || { echo "Failed to download NDK. Please verify the URL."; exit 1; }
-          
-          unzip android-ndk-${NDK_VERSION}-linux.zip
+          # Download and unzip the NDK
+          wget $NDK_URL -O android-ndk.zip
+          unzip android-ndk.zip
           export ANDROID_NDK_HOME=$(pwd)/android-ndk-${NDK_VERSION}
           echo "ANDROID_NDK_HOME=$ANDROID_NDK_HOME" >> $GITHUB_ENV
 
@@ -29,38 +28,48 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential autoconf automake libtool
+          sudo apt-get install -y build-essential autoconf automake libtool wget unzip
 
-      # Step 4: Modify `localoptions.h` to disable password authentication
+      # Step 4: Download Dropbear source code
+      - name: Download Dropbear 2024.86
+        run: |
+          wget https://github.com/mkj/dropbear/releases/download/2024.86/dropbear-2024.86.tar.bz2
+          tar -xvjf dropbear-2024.86.tar.bz2
+          cd dropbear-2024.86
+
+      # Step 5: Modify `localoptions.h` to disable password authentication
       - name: Modify localoptions.h
         run: |
-          sed -i 's/#define DROPBEAR_SVR_PASSWORD_AUTH 1/#define DROPBEAR_SVR_PASSWORD_AUTH 0/' path/to/dropbear-2024.86/src/localoptions.h
-          sed -i 's/#define DROPBEAR_CLI_PASSWORD_AUTH 1/#define DROPBEAR_CLI_PASSWORD_AUTH 0/' path/to/dropbear-2024.86/src/localoptions.h
+          # Navigate to the Dropbear source directory
+          cd dropbear-2024.86/src
+          # Disable password authentication for server and client
+          sed -i 's/#define DROPBEAR_SVR_PASSWORD_AUTH 1/#define DROPBEAR_SVR_PASSWORD_AUTH 0/' localoptions.h
+          sed -i 's/#define DROPBEAR_CLI_PASSWORD_AUTH 1/#define DROPBEAR_CLI_PASSWORD_AUTH 0/' localoptions.h
 
-      # Step 5: Modify source code in svr-auth.c to force root login without authentication
+      # Step 6: Modify source code in svr-auth.c to force root login without authentication
       - name: Modify source for root login without authentication
         run: |
           # Modify Dropbear's source code to ensure root login without password
-          # Modify svr-auth.c to bypass authentication
-          sed -i 's/username != NULL/username == "root" && password == NULL/' path/to/dropbear-2024.86/src/serv/svr-auth.c
-          sed -i 's/validate_password(username, password)//' path/to/dropbear-2024.86/src/serv/svr-auth.c
+          # Navigate to the source code of svr-auth.c
+          sed -i 's/username != NULL/username == "root" && password == NULL/' src/serv/svr-auth.c
+          sed -i 's/validate_password(username, password)//' src/serv/svr-auth.c
 
-      # Step 6: Set up the cross-compilation environment for Android armv8a
+      # Step 7: Set up the cross-compilation environment for Android armv8a
       - name: Set up cross-compilation for Android armv8a
         run: |
           export CROSS_COMPILE=$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android-
           export SYSROOT=$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/sysroot
           export PATH=$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin:$PATH
 
-      # Step 7: Build Dropbear for ARMv8a architecture
+      # Step 8: Build Dropbear for ARMv8a architecture
       - name: Build Dropbear
         run: |
-          cd path/to/dropbear-2024.86
+          cd dropbear-2024.86
           ./configure --host=aarch64-linux-android --prefix=$HOME/dropbear --sysroot=$SYSROOT
           make
           make install
 
-      # Step 8: Archive the build artifacts (optional)
+      # Step 9: Archive the build artifacts (optional)
       - name: Archive the build artifacts
         uses: actions/upload-artifact@v3
         with:

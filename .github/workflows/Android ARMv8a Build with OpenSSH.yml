@@ -45,11 +45,15 @@ jobs:
         # 克隆 OpenSSH 仓库（GitHub 上的 OpenSSH 仓库）
         git clone https://github.com/openssh/openssh-portable
         cd openssh-portable
-        # 切换到 9.9p1 版本
+        
+        # 拉取所有远程标签并切换到 OpenSSH_9_9p1 版本
+        git fetch --tags
         git checkout tags/OPENSSH_9_9p1
+        
         # 设置编译环境并编译 OpenSSH
         export ANDROID_NDK_HOME=$NDK_HOME
         export PATH=$ANDROID_NDK_HOME:$PATH
+        
         # 配置并构建 OpenSSH
         ./configure --host=arm-linux-androideabi --with-ndk=$NDK_HOME
         make

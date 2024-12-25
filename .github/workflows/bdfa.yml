@@ -12,12 +12,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Step 2: Set up Android NDK (Manually configure NDK version r27c)
+      # Step 2: Set up Android NDK r27c
       - name: Set up Android NDK r27c
         run: |
           NDK_VERSION=r27c  # Specify the NDK version you want to use (e.g., r27c)
-          wget https://dl.google.com/android/repository/android-ndk-${NDK_VERSION}-linux-x86_64.zip
-          unzip android-ndk-${NDK_VERSION}-linux-x86_64.zip
+          NDK_URL="https://dl.google.com/android/repository/android-ndk-${NDK_VERSION}-linux.zip"  # Correct NDK URL
+          
+          # Attempt to download the NDK
+          wget $NDK_URL || { echo "Failed to download NDK. Please verify the URL."; exit 1; }
+          
+          unzip android-ndk-${NDK_VERSION}-linux.zip
           export ANDROID_NDK_HOME=$(pwd)/android-ndk-${NDK_VERSION}
           echo "ANDROID_NDK_HOME=$ANDROID_NDK_HOME" >> $GITHUB_ENV
 

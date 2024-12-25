@@ -1,0 +1,69 @@
+name: Build Dropbear for Android
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    - name: Install Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          build-essential \
+          autoconf \
+          automake \
+          libtool \
+          zlib1g-dev \
+          wget \
+          unzip \
+          gcc-aarch64-linux-gnu \
+          musl-tools
+
+    - name: Download and Extract Dropbear Source
+      run: |
+        wget https://matt.ucc.asn.au/dropbear/releases/dropbear-2022.83.tar.bz2
+        tar -xjf dropbear-2022.83.tar.bz2
+        cd dropbear-2022.83
+
+    - name: Configure Dropbear for Android
+      run: |
+        cd dropbear-2022.83
+        export CC=aarch64-linux-gnu-gcc
+        export CFLAGS="--static -Os"
+        ./configure \
+          --host=aarch64-linux-gnu \
+          --disable-zlib \
+          --disable-loginfunc \
+          --enable-static \
+          --disable-pam \
+          --disable-lastlog \
+          --disable-utmp \
+          --disable-wtmp \
+          --disable-utmpx \
+          --disable-shadow \
+          --disable-pututline \
+          --disable-pututxline \
+          --disable-bundled-libtom \
+          --disable-client-password-auth \
+          --disable-server-password-auth \
+          --enable-root-login
+
+    - name: Build Dropbear
+      run: |
+        cd dropbear-2022.83
+        make PROGRAMS="dropbear dbclient dropbearkey dropbearconvert scp"
+
+    - name: Upload Build Artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: dropbear-android-64
+        path: dropbear-2022.83/

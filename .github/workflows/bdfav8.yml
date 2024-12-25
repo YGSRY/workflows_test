@@ -21,6 +21,8 @@ jobs:
         unzip android-ndk-r25c-linux.zip -d $HOME
         export ANDROID_NDK_HOME=$HOME/android-ndk-r25c
         echo "Android NDK set up at $ANDROID_NDK_HOME"
+        # Ensure the correct NDK toolchain is added to PATH
+        export PATH=$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin:$PATH
 
     - name: Install dependencies
       run: |
@@ -47,7 +49,7 @@ jobs:
     - name: Configure Dropbear for ARMv8a
       run: |
         cd dropbear
-        export PATH=$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin:$PATH
+        # Ensure NDK toolchain is available
         export CC=aarch64-linux-android21-clang
         export AR=aarch64-linux-android-ar
         export AS=aarch64-linux-android-as

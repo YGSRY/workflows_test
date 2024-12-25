@@ -6,30 +6,33 @@ on:
       - main  # 你可以修改为触发的分支
 
 jobs:
-  setup:
+  build:
     runs-on: ubuntu-latest  # 使用 Ubuntu 环境构建
 
     steps:
     # Step 1: 检出代码
     - name: Checkout repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v3  # 使用最新的 v3 版本
 
-    # Step 2: 设置 JDK 11
-    - name: Set up JDK 11
-      uses: actions/setup-java@v3
-      with:
-        java-version: '11'
+    # Step 2: 手动安装 JDK 11
+    - name: Install JDK 11
+      run: |
+        sudo apt update -y
+        sudo apt install -y openjdk-11-jdk
+        export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+        export PATH=$JAVA_HOME/bin:$PATH
+        java -version
 
-    # Step 3: 安装依赖项
+    # Step 3: 安装其他依赖项
     - name: Install required dependencies
       run: |
         sudo apt-get update -y
         sudo apt-get install -y wget unzip build-essential git
 
-    # Step 4: 安装 Android NDK r27c
+    # Step 4: 手动安装 Android NDK r27c
     - name: Download and Install Android NDK r27c
       run: |
-        # 下载并解压 Android NDK
+        # 下载并解压 Android NDK r27c
         wget https://dl.google.com/android/repository/android-ndk-r27c-linux.zip -O android-ndk-r27c.zip
         unzip android-ndk-r27c.zip -d $HOME/
         export NDK_HOME=$HOME/android-ndk-r27c
@@ -45,12 +48,14 @@ jobs:
         # 设置编译环境并编译 OpenSSH
         export ANDROID_NDK_HOME=$NDK_HOME
         export PATH=$ANDROID_NDK_HOME:$PATH
+        # 配置并构建 OpenSSH
         ./configure --host=arm-linux-androideabi --with-ndk=$NDK_HOME
         make
 
     # Step 6: 构建 Android 项目（可选）
     - name: Build Android project
-      run: ./gradlew assembleRelease  # 请确保 gradle 设置正确
+      run: |
+        ./gradlew assembleRelease  # 根据需要修改为适当的 Gradle 命令
 
     # Step 7: 上传构建产物
     - name: Upload build artifacts

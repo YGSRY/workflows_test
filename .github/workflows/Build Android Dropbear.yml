@@ -32,9 +32,12 @@ jobs:
         echo "NDK_HOME=$HOME/android-ndk-r11c" >> $GITHUB_ENV
         echo "PATH=$HOME/android-ndk-r11c/toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64/bin:$PATH" >> $GITHUB_ENV
 
-    # Export DISABLE_PIE if targeting Android < 4.1
-    - name: Export DISABLE_PIE for Android < 4.1
-      run: echo "DISABLE_PIE=1" >> $GITHUB_ENV
+    # Modify options.h automatically
+    - name: Modify options.h
+      run: |
+        cd dropbear-android
+        sed -i 's/.*#define DROPBEAR_DEFAULT_PORT.*/#define DROPBEAR_DEFAULT_PORT 2222/' options.h
+        sed -i 's/.*#define DROPBEAR_PASSWORD_AUTH.*/#define DROPBEAR_PASSWORD_AUTH 1/' options.h
 
     # Run the build script
     - name: Build Dropbear

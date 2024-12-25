@@ -1,54 +1,74 @@
-name: Build libssh for Android armv8a
+name: Compile libssh for Android ARMv8a
 
 on:
-  workflow_dispatch:  # 允许手动触发工作流
+  # 手动触发工作流
+  workflow_dispatch:
+  # 在推送到 main 分支时触发工作流
+  push:
+    branches:
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
+    # Checkout 代码
+    - name: Checkout code
+      uses: actions/checkout@v3  # 使用 actions/checkout@v3 最新版本
 
+    # 安装 Android NDK
+    - name: Install Android NDK
+      run: |
+        # 安装 JDK
+        sudo apt update
+        sudo apt install -y openjdk-8-jdk
+
+        # 下载并解压 Android NDK
+        NDK_VERSION="25.2.9519653"  # 你可以根据需要修改 NDK 版本
+        wget https://dl.google.com/android/repository/android-ndk-${NDK_VERSION}-linux-x86_64.zip
+        unzip android-ndk-${NDK_VERSION}-linux-x86_64.zip
+        sudo mv android-ndk-${NDK_VERSION} /usr/local/android-ndk
+        echo "ANDROID_NDK=/usr/local/android-ndk" >> $GITHUB_ENV
+
+    # 安装构建依赖
     - name: Install dependencies
       run: |
-        sudo apt-get update
-        sudo apt-get install -y \
+        sudo apt update
+        sudo apt install -y \
+          build-essential \
           wget \
           tar \
-          build-essential \
           cmake \
-          python3 \
-          clang \
-          pkg-config
+          git \
+          unzip \
+          libssl-dev
 
-    - name: Download NDK r27c
-      run: |
-        wget https://dl.google.com/android/repository/android-ndk-r27c-linux.zip -O /tmp/android-ndk-r27c.zip
-        unzip /tmp/android-ndk-r27c.zip -d $HOME/
-        echo "NDK=$HOME/android-ndk-r27c" >> $GITHUB_ENV
-
-    - name: Extract libssh source code
+    # 下载并解压 libssh
+    - name: Download and extract libssh
       run: |
         wget https://www.libssh.org/files/0.11/libssh-0.11.1.tar.xz
-        tar -xvf libssh-0.11.1.tar.xz
+        tar -xf libssh-0.11.1.tar.xz
         cd libssh-0.11.1
 
-    - name: Configure build
+    # 编译 libssh for ARMv8a
+    - name: Build libssh for ARMv8a
       run: |
-        cd libssh-0.11.1
-        mkdir build
+        mkdir -p build
         cd build
-        $HOME/android-ndk-r27c/ndk-build --target-platform=android-21 --arch=arm64-v8a
+        # 设置交叉编译工具链
+        cmake ../ \
+          -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK/build/cmake/android.toolchain.cmake \
+          -DANDROID_ABI=arm64-v8a \
+          -DANDROID_PLATFORM=android-21 \
+          -DANDROID_NDK=$ANDROID_NDK \
+          -DCMAKE_BUILD_TYPE=Release
+        cmake --build . --target install
 
-    - name: Build libssh
+    # 归档编译后的产物
+    - name: Archive libssh for ARMv8a
       run: |
-        cd libssh-0.11.1/build
-        cmake .. -DCMAKE_TOOLCHAIN_FILE=$HOME/android-ndk-r27c/build/cmake/android.toolchain.cmake -DANDROID_ABI=arm64-v8a -DANDROID_NATIVE_API_LEVEL=21
-        make -j$(nproc)
-
-    - name: Archive build artifacts
-      run: |
-        mkdir -p $GITHUB_ENV
-        cp -r libssh-0.11.1/build/* $GITHUB_ENV
+        cd build
+        tar -czf libssh-arm64-v8a.tar.gz .
+        # 可以将构建的文件上传到 GitHub Releases 或其他存储
+        echo "Build completed and archived."

@@ -35,6 +35,10 @@ jobs:
         tar -xjf dropbear.tar.bz2 -C $HOME
         mv $HOME/dropbear-2024.86 $HOME/dropbear
 
+        # 验证文件结构
+        ls -la $HOME/dropbear
+        ls -la $HOME/dropbear/src
+
         # 创建并配置 localoptions.h
         echo '#define DROPBEAR_SVR_PASSWORD_AUTH 0' >> $HOME/dropbear/localoptions.h
         echo '#define DROPBEAR_CLI_PASSWORD_AUTH 0' >> $HOME/dropbear/localoptions.h
@@ -42,6 +46,9 @@ jobs:
     - name: Modify svr-auth.c for Root Login
       run: |
         cd $HOME/dropbear/src
+        # 验证路径是否正确
+        pwd
+        ls -la
         # 修改 svr-auth.c 文件，强制跳过认证
         sed -i 's/if (auth_check() == DROPBEAR_FAILURE)/if (0)/' svr-auth.c
 

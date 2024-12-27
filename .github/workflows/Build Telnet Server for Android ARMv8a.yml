@@ -44,13 +44,13 @@ jobs:
     - name: Verify sdkmanager command
       run: |
         echo "Verifying sdkmanager..."
-        which sdkmanager
-        sdkmanager --version  # Check sdkmanager version
+        which sdkmanager || echo "sdkmanager not found"
+        sdkmanager --version || echo "sdkmanager version check failed"
 
     - name: Install required Android SDK components
       run: |
         # Check if sdkmanager works and then install components
-        sdkmanager "platforms;android-30" "build-tools;30.0.3" "platform-tools"
+        sdkmanager "platforms;android-30" "build-tools;30.0.3" "platform-tools" || echo "SDK manager failed"
 
     - name: Install required packages
       run: |

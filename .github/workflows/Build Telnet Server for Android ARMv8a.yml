@@ -42,17 +42,10 @@ jobs:
         echo "ANDROID_SDK_ROOT: $ANDROID_SDK_ROOT"
         echo "PATH: $PATH"
 
-    - name: Manually download and install required Android SDK components
+    - name: Install required Android SDK components
       run: |
-        # Manually download platform tools, build tools, and platforms
-        wget https://dl.google.com/android/repository/platform-tools_r30.0.5-linux.zip
-        sudo unzip -q platform-tools_r30.0.5-linux.zip -d /usr/local/android-sdk/
-        wget https://dl.google.com/android/repository/build-tools_r30.0.3-linux.zip
-        sudo unzip -q build-tools_r30.0.3-linux.zip -d /usr/local/android-sdk/
-
-        # Download and install Android 30 platform
-        wget https://dl.google.com/android/repository/platforms/android-30_r05.zip
-        sudo unzip -q android-30_r05.zip -d /usr/local/android-sdk/platforms/
+        # Use sdkmanager to install necessary components
+        sdkmanager "platforms;android-30" "build-tools;30.0.3" "platform-tools"
 
     - name: Install required packages
       run: |

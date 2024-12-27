@@ -49,8 +49,10 @@ jobs:
         sudo unzip -q platform-tools_r30.0.5-linux.zip -d /usr/local/android-sdk/
         wget https://dl.google.com/android/repository/build-tools_r30.0.3-linux.zip
         sudo unzip -q build-tools_r30.0.3-linux.zip -d /usr/local/android-sdk/
-        wget https://dl.google.com/android/repository/platforms_r30.zip  # Updated URL for Android platform
-        sudo unzip -q platforms_r30.zip -d /usr/local/android-sdk/
+
+        # Download and install Android 30 platform
+        wget https://dl.google.com/android/repository/platforms/android-30_r05.zip
+        sudo unzip -q android-30_r05.zip -d /usr/local/android-sdk/platforms/
 
     - name: Install required packages
       run: |

@@ -28,8 +28,10 @@ jobs:
     - name: Set up Android SDK
       uses: android-actions/setup-android@v3
       with:
-        sdk-version: '30.0.3'
-        ndk-version: '21.3.6528147'
+        cmdline-tools-version: '12266719'  # 使用适当版本的 cmdline-tools
+        accept-android-sdk-licenses: true  # 自动接受 Android SDK 许可证
+        log-accepted-android-sdk-licenses: true
+        packages: 'platform-tools, tools'  # 安装所需的 SDK 工具
 
     - name: Install required packages
       run: |

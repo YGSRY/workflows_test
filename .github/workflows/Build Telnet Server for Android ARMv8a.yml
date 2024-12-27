@@ -27,13 +27,26 @@ jobs:
         source /etc/environment
         java -version
 
-    - name: Set up Android SDK
-      uses: android-actions/setup-android@v3
-      with:
-        cmdline-tools-version: '12266719'  # 使用适当版本的 cmdline-tools
-        accept-android-sdk-licenses: true  # 自动接受 Android SDK 许可证
-        log-accepted-android-sdk-licenses: true
-        packages: 'platform-tools, tools'  # 安装所需的 SDK 工具
+    - name: Download Android SDK Command-line Tools
+      run: |
+        # Download and unzip the Android SDK command-line tools
+        wget https://dl.google.com/android/repository/commandlinetools-linux-12266719_latest.zip
+        sudo mkdir -p /usr/local/android-sdk/cmdline-tools
+        sudo unzip -q commandlinetools-linux-12266719_latest.zip -d /usr/local/android-sdk/cmdline-tools
+
+    - name: Set up Android SDK environment variables
+      run: |
+        echo "export ANDROID_SDK_ROOT=/usr/local/android-sdk" | sudo tee -a /etc/environment
+        echo "export PATH=\$PATH:/usr/local/android-sdk/cmdline-tools/latest/bin:/usr/local/android-sdk/platform-tools" | sudo tee -a /etc/environment
+        source /etc/environment
+
+    - name: Accept Android SDK licenses
+      run: |
+        sdkmanager --licenses
+
+    - name: Install Android SDK packages
+      run: |
+        sdkmanager "platform-tools" "tools" "build-tools;30.0.3" "platforms;android-30"
 
     - name: Install required packages
       run: |

@@ -29,7 +29,6 @@ jobs:
 
     - name: Download Android SDK Command-line Tools
       run: |
-        # Download and unzip the Android SDK command-line tools
         wget https://dl.google.com/android/repository/commandlinetools-linux-12266719_latest.zip
         sudo mkdir -p /usr/local/android-sdk/cmdline-tools
         sudo unzip -q commandlinetools-linux-12266719_latest.zip -d /usr/local/android-sdk/cmdline-tools
@@ -42,9 +41,15 @@ jobs:
         echo "ANDROID_SDK_ROOT: $ANDROID_SDK_ROOT"
         echo "PATH: $PATH"
 
+    - name: Verify sdkmanager command
+      run: |
+        echo "Verifying sdkmanager..."
+        which sdkmanager
+        sdkmanager --version  # Check sdkmanager version
+
     - name: Install required Android SDK components
       run: |
-        # Use sdkmanager to install necessary components
+        # Check if sdkmanager works and then install components
         sdkmanager "platforms;android-30" "build-tools;30.0.3" "platform-tools"
 
     - name: Install required packages

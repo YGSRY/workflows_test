@@ -1,0 +1,63 @@
+name: Build Telnet Server for Android ARMv8a
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:  # 允许手动触发工作流
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up Android SDK
+      uses: android-actions/setup-android@v3
+      with:
+        sdk-version: '30.0.3'
+        ndk-version: '21.3.6528147'
+
+    - name: Install required packages
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          git \
+          make \
+          build-essential \
+          automake \
+          autoconf \
+          libtool \
+          pkg-config \
+          clang \
+          libssl-dev \
+          libncurses5-dev \
+          zlib1g-dev
+
+    - name: Clone inetutils repository
+      run: |
+        git clone https://git.savannah.gnu.org/git/inetutils.git
+        cd inetutils
+        ./bootstrap
+
+    - name: Configure build for Android ARMv8a
+      run: |
+        cd inetutils
+        ./configure --host=aarch64-linux-android --prefix=/tmp/inetutils-android
+
+    - name: Build Telnet for Android ARMv8a
+      run: |
+        cd inetutils
+        make
+        make install
+
+    - name: Upload compiled artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: inetutils-android
+        path: /tmp/inetutils-android
